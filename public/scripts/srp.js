@@ -6,9 +6,6 @@ var N = bigInt("EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C9C256576
 
 function signIn()
 {
-    //var hash = sha1("Message").toString(CryptoJS.enc.Hex);
-    //console.log(hash);
-
     clientHello().then(exchangePublicValues);
 }
 
@@ -36,19 +33,32 @@ function clientHello()
     return deferred.promise;
 }
 
-function pad(n, width, z)
+function hexPad(n, width, z)
 {
-    width = width || 256;
     z = z || "0";
     n = n + "";
     return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
 }
 
+function pad(bigInteger)
+{
+    var result = "";
+    var hex = hexPad(bigInteger.toString(16), 256, "0");
+
+    for (var bytes = [], c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substr(c, 2), 16));
+
+    for (var i = 0; i < bytes.length; i++)
+        result += String.fromCharCode(parseInt(bytes[i], 2));
+
+    return result;
+}
+
 function exchangePublicValues(data)
 {
     var deferred = Q.defer();
-    var username = "alice"; //$("#username").val();
-    var password = "password123"; // $("#password").val();
+    var username = $("#username").val();
+    var password = $("#password").val();
 
     // TODO Read g, generate random a and compute A.
 
@@ -57,19 +67,13 @@ function exchangePublicValues(data)
     var s = bigInt(data.s, 16);
     var B = bigInt(data.B, 16);
 
-    console.log(pad(A.toString(256)));
-
-    var u = bigInt(sha1(pad(A.toString(256)) + pad(B.toString(256))).toString(CryptoJS.enc.Hex), 16);
-
-
-    //var k = bigInt(sha1(N.toString(256) + pad(g.toString(256))).toString(CryptoJS.enc.Hex), 16);
-    //var x = bigInt(sha1(s.toString(256) + CryptoJS.SHA1(username + ":" + password)).toString(CryptoJS.enc.Hex), 16);
+    var u = bigInt(sha1(pad(A) + pad(B)).toString(CryptoJS.enc.Hex), 16);
+    var k = bigInt(sha1(pad(N) + pad(g)).toString(CryptoJS.enc.Hex), 16);
+    var x = bigInt(sha1(pad(s) + sha1(username + ":" + password)).toString(CryptoJS.enc.Hex), 16);
 
     console.log("u: " + u.toString(16).toUpperCase());
-    //console.log("k: " + k.toString(16).toUpperCase());
-    //console.log("x: " + x.toString(16).toUpperCase());
-
-    //var K = g.pow(new BigInteger("4000000000", 10));
+    console.log("k: " + k.toString(16).toUpperCase());
+    console.log("x: " + x.toString(16).toUpperCase());
 
     var K = B.minus(k.times(g.modPow(x, N))).modPow(a.plus(u.times(x)), N).mod(N);
     console.log(K.toString());
