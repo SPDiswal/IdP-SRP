@@ -19,6 +19,7 @@ router.get("/", function (req, res, next)
 
 router.post("/", function (req, res, next)
 {
+    console.log(req);
     if(req.body.username !== undefined)
     {
         var db = new NeDB({filename: 'data/data.db', autoload: true});
@@ -35,22 +36,25 @@ router.post("/", function (req, res, next)
     }
     else if(req.body.A !== undefined)
     {
-        db.findOne({username: req.session.username}, function (err, doc)
-        {
+        //db.findOne({username: req.session.username}, function (err, doc)
+        //{
             //TODO check if doc is defined
             if(A % N === 0)
                 return; //illegal_parameter, sec. 2.5.4
 
             var A = bigInt(req.body.A, 16);
             var u = bigInt(sha1(A.toString() + B.toString()).toString(encHex), 16);
-            var v = bigInt(doc.passwordVerifier.toString(encHex), 16);
+            //var v = bigInt(doc.passwordVerifier.toString(encHex), 16);
+            var v = bigInt("7E273DE8696FFC4F4E337D05B4B375BEB0DDE1569E8FA00A9886D8129BADA1F1822223CA1A605B530E379BA4729FDC59F105B4787E5186F5C671085A1447B52A48CF1970B4FB6F8400BBF4CEBFBB168152E08AB5EA53D15C1AFF87B2B9DA6E04E058AD51CC72BFC9033B564E26480D78E955A5E29E7AB245DB2BE315E2099AFB", 16);
             var length = 256;
             var b = bigInt(crypto.randomBytes(Math.ceil(length/2)).toString("hex").slice(0, length));
-            var S = Math.pow((A * Math.pow(v, u)), b) % N;
+            var S = A.multiply(v.pow(u)).modPow(b, N);
             var K = sha1(sessionKey);
+            console.log(S);
+            console.log(K);
 
             //req.session.sessionKey = sessionKey;
-        });
+        //});
     }
     else
         res.status(400).send();
