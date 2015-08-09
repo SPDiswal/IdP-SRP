@@ -1,8 +1,6 @@
 var sha1 = CryptoJS.SHA1;
 
 var a = bigInt("60975527035CF2AD1989806F0407210BC81EDC04E2762A56AFD529DDDA2D4393", 16);
-var A = bigInt("61D5E490F6F1B79547B0704C436F523DD0E560F0C64115BB72557EC44352E8903211C04692272D8B2D1A5358A2CF1B6E0BFCF99F921530EC8E39356179EAE45E42BA92AEACED825171E1E8B9AF6D9C03E1327F44BE087EF06530E69F66615261EEF54073CA11CF5858F0EDFDFE15EFEAB349EF5D76988A3672FAC47B0769447B", 16);
-var N = bigInt("EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C9C256576D674DF7496EA81D3383B4813D692C6E0E0D5D8E250B98BE48E495C1D6089DAD15DC7D7B46154D6B6CE8EF4AD69B15D4982559B297BCF1885C529F566660E57EC68EDBC3C05726CC02FD4CBF4976EAA9AFD5138FE8376435B9FC61D2FC0EB06E3", 16);
 
 function signIn()
 {
@@ -49,34 +47,61 @@ function pad(bigInteger)
         bytes.push(parseInt(hex.substr(c, 2), 16));
 
     for (var i = 0; i < bytes.length; i++)
-        result += String.fromCharCode(parseInt(bytes[i], 2));
+        result += String.fromCharCode(bytes[i]); // parseInt(bytes[i], 2)
 
     return result;
+}
+
+function byteSHA1(bigInteger)
+{
+    var result = "";
+    var hex = bigInteger.toString(16);
+
+    for (var bytes = [], c = 0; c < hex.length; c += 2)
+        bytes.push(parseInt(hex.substr(c, 2), 16));
+
+    for (var i = 0; i < bytes.length; i++)
+        result += String.fromCharCode(parseInt(bytes[i], 2));
+
+    return sha1(result);
 }
 
 function exchangePublicValues(data)
 {
     var deferred = Q.defer();
-    var username = $("#username").val();
-    var password = $("#password").val();
-
-    // TODO Read g, generate random a and compute A.
+    var username = "alice";//$("#username").val();
+    var password = "password123";//$("#password").val();
 
     var N = bigInt(data.N, 16);
     var g = bigInt(data.g, 16);
     var s = bigInt(data.s, 16);
-    var B = bigInt(data.B, 16);
+    //var B = bigInt(data.B, 16);
 
-    var u = bigInt(sha1(pad(A) + pad(B)).toString(CryptoJS.enc.Hex), 16);
-    var k = bigInt(sha1(pad(N) + pad(g)).toString(CryptoJS.enc.Hex), 16);
-    var x = bigInt(sha1(pad(s) + sha1(username + ":" + password)).toString(CryptoJS.enc.Hex), 16);
+    // TODO Use random a.
+    var A = g.modPow(a, N);
+    var b = bigInt("E487CB59D31AC550471E81F00F6928E01DDA08E974A004F49E61F5D105284D20", 16);
 
-    console.log("u: " + u.toString(16).toUpperCase());
-    console.log("k: " + k.toString(16).toUpperCase());
-    console.log("x: " + x.toString(16).toUpperCase());
+    var k = bigInt(sha1(N.toString(16) + g.toString(16)).toString(CryptoJS.enc.Hex), 16);
+    var x = bigInt(byteSHA1(s.toString(16) + byteSHA1(username + ":" + password)).toString(CryptoJS.enc.Hex), 16);
 
-    var K = B.minus(k.times(g.modPow(x, N))).modPow(a.plus(u.times(x)), N).mod(N);
-    console.log(K.toString());
+    console.log("x: " + x.toString(16));
+
+    var v = g.modPow(x, N).mod(N);
+
+    var B = k.times(v).plus(g.modPow(b, N)).mod(N);
+    var u = bigInt(sha1(A.toString(16) + B.toString(16)).toString(CryptoJS.enc.Hex), 16);
+
+    var clientSessionKey = B.minus(k.times(g.modPow(x, N))).modPow(a.plus(u.times(x)), N).mod(N);
+
+    if (clientSessionKey.isNegative()) clientSessionKey = clientSessionKey.plus(N);
+    console.log(clientSessionKey.toString(16));
+
+
+
+    var serverSessionKey = A.times(v.modPow(u, N)).modPow(b, N).mod(N);
+
+    if (serverSessionKey.isNegative()) serverSessionKey = serverSessionKey.plus(N);
+    console.log(serverSessionKey.toString(16));
 
     deferred.resolve();
 
