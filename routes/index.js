@@ -71,8 +71,6 @@ function computeSessionKey(req, res)
 
             var K = sha1(S.toString(16)).toString();
 
-            console.log(K);
-
             req.session.A = A.toString(16);
             req.session.K = K;
 

@@ -9,7 +9,10 @@ block content
         input#password(type="password", name="password")
     p
     input#register(type="button", value="Register")
-    br
+    p
     a(href="/") I have an account already
+    p
+    p#error(style="display:none"): b(style="color:red") Username already taken
+    p#success(style="display:none"): b(style="color:green") Account created successfully
 
     script(src="/scripts/register.js")

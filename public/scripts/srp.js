@@ -1,4 +1,5 @@
 var sha1 = CryptoJS.SHA1;
+var aes = CryptoJS.AES;
 
 function random(N)
 {
@@ -7,6 +8,9 @@ function random(N)
 
 function signIn()
 {
+    $("#error").hide();
+    $("#success").hide();
+
     clientHello()
         .then(clientKeyExchange)
         .then(computeSessionKey)
@@ -132,8 +136,41 @@ function validateServerProof(keys)
 
 function established(keys)
 {
-    var K = keys.K;
+    $("#success").show();
 
+    var sessionKey = keys.K;
+
+    var message = "";
+    var messageIndex = Math.floor(Math.random() * (3 - 1)) + 1;
+
+    switch (messageIndex)
+    {
+        case 1:
+            message = "Hello from Earth!";
+            break;
+
+        case 2:
+            message = "Hello from Earth!";
+            break;
+
+        case 3:
+            message = "Hello from Earth!";
+            break;
+    }
+
+    var encryptedMessage = aes.encrypt(message, sessionKey).toString();
+
+    $.ajax({
+        type:        "POST",
+        url:         "/message",
+        data:        JSON.stringify({ message: encryptedMessage }),
+        contentType: "application/json",
+        success:     function (data)
+                     {
+                         var decryptedMessage = aes.decrypt(data.message, sessionKey).toString(CryptoJS.enc.Utf8);
+                         $("#message").text(decryptedMessage);
+                     }
+    });
 }
 
 function resolve(deferred, predefinedData)
@@ -157,7 +194,7 @@ function reject(deferred)
 
 function errorHandler()
 {
-    console.log("ERROR");
+    $("#error").show();
 }
 
 $("#signIn").click(signIn);

@@ -2,8 +2,12 @@ var sha1 = CryptoJS.SHA1;
 
 function register()
 {
+    $("#error").hide();
+    $("#success").hide();
+
     clientRegistrationHello()
         .then(sendRegistration)
+        .then(registered)
         .catch(errorHandler);
 }
 
@@ -51,6 +55,11 @@ function sendRegistration(keys)
     return deferred.promise;
 }
 
+function registered(keys)
+{
+    $("#success").show();
+}
+
 function resolve(deferred, predefinedData)
 {
     return function (data)
@@ -72,7 +81,7 @@ function reject(deferred)
 
 function errorHandler()
 {
-    console.log("ERROR");
+    $("#error").show();
 }
 
 $("#register").click(register);

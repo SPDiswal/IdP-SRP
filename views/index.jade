@@ -9,7 +9,12 @@ block content
         input#password(type="password", name="password")
     p
     input#signIn(type="button", value="Sign in")
-    br
+    p
     a(href="/register") Create a new account
+    p
+    p#error(style="display:none"): b(style="color:red") Wrong username or password
+    p#success(style="display:none"): b(style="color:green") Authentication succeeded
+    p
+    p#message
 
     script(src="/scripts/srp.js")

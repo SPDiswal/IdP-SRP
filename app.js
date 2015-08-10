@@ -9,6 +9,7 @@ var session = require("express-session");
 // PAGES
 var index = require("./routes/index");
 var register = require("./routes/register");
+var message = require("./routes/message");
 
 var app = express();
 
@@ -28,6 +29,7 @@ app.use(session({secret: "srp"}));
 // ROUTES
 app.use("/", index);
 app.use("/register", register);
+app.use("/message", message);
 
 // ERROR HANDLERS
 // 404.
