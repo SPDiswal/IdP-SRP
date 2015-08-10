@@ -1,30 +1,48 @@
-function random(N)
-{
-    return bigInt.randBetween(bigInt[2].modPow(bigInt[256], N), bigInt[2].modPow(bigInt[512], N)).modPow(bigInt[2], N);
-}
+var sha1 = CryptoJS.SHA1;
 
 function register()
 {
-    clientHello()
-        .then(clientKeyExchange)
-        .then(computeSessionKey)
-        .then(validateServerProof)
-        .then(established)
+    clientRegistrationHello()
+        .then(sendRegistration)
         .catch(errorHandler);
-
-    //var I = $("#username").val();
-    //var P = $("#password").val();
 }
 
-function clientHello()
+function clientRegistrationHello()
 {
     var deferred = Q.defer();
+
     var I = $("#username").val();
 
     $.ajax({
         type:        "POST",
         url:         "/",
         data:        { I: I },
+        contentType: "application/json",
+        success:     resolve(deferred),
+        error:       reject(deferred)
+    });
+
+    return deferred.promise;
+}
+
+function sendRegistration(keys)
+{
+    var deferred = Q.defer();
+
+    var I = $("#username").val();
+    var P = $("#password").val();
+
+    var N = bigInt(keys.N);
+    var g = bigInt(keys.g);
+    var s = bigInt(keys.s);
+
+    var x = bigInt(sha1(s.toString(16) + sha1(I + ":" + P).toString()).toString(), 16);
+    var v = g.modPow(x, N);
+
+    $.ajax({
+        type:        "POST",
+        url:         "/",
+        data:        { I: I, s: s.toString(16), v: v.toString(16) },
         contentType: "application/json",
         success:     resolve(deferred),
         error:       reject(deferred)
