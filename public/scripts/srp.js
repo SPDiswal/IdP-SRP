@@ -10,6 +10,7 @@ function signIn()
 {
     $("#error").hide();
     $("#success").hide();
+    $("#message").text();
 
     clientHello()
         .then(clientKeyExchange)
