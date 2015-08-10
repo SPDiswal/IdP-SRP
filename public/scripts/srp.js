@@ -23,7 +23,7 @@ function clientHello()
     $.ajax({
         type:        "POST",
         url:         "/",
-        data:        { I: I },
+        data:        JSON.stringify({ I: I }),
         contentType: "application/json",
         success:     resolve(deferred),
         error:       reject(deferred)
@@ -54,7 +54,7 @@ function clientKeyExchange(keys)
     $.ajax({
         type:        "POST",
         url:         "/",
-        data:        { A: A.toString(16) },
+        data:        JSON.stringify({ A: A.toString(16) }),
         contentType: "application/json",
         success:     resolve(deferred, { N: N, g: g, a: a, A: A, B: B, s: s }),
         error:       reject(deferred)
@@ -99,7 +99,7 @@ function computeSessionKey(keys)
     $.ajax({
         type:        "POST",
         url:         "/",
-        data:        { M: M },
+        data:        JSON.stringify({ M: M }),
         contentType: "application/json",
         success:     resolve(deferred, { A: A, K: K, M: M }),
         error:       reject(deferred)

@@ -6,6 +6,10 @@ var cookieParser = require("cookie-parser");
 var bodyParser = require("body-parser");
 var session = require("express-session");
 
+// PAGES
+var index = require("./routes/index");
+var register = require("./routes/register");
+
 var app = express();
 
 // VIEW ENGINE
@@ -22,8 +26,8 @@ app.use(express.static(path.join(__dirname, "public")));
 app.use(session({secret: "srp"}));
 
 // ROUTES
-app.use("/", require("./routes/index"));
-app.use("/register", require("./routes/register"));
+app.use("/", index);
+app.use("/register", register);
 
 // ERROR HANDLERS
 // 404.

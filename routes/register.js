@@ -14,12 +14,9 @@ function random()
 function exchangeSaltAndKeys(req, res)
 {
     var s = random();
-    req.session.I = req.body.I;
-    req.session.s = s;
 
-    console.log(N.toString(16));
-    console.log(g.toString(16));
-    console.log(s.toString(16));
+    req.session.I = req.body.I;
+    req.session.s = s.toString(16);
 
     res.json({ N: N.toString(16), g: g.toString(16), s: s.toString(16) });
 }
@@ -28,7 +25,7 @@ function registerUser(req, res)
 {
     var db = new NeDB({ filename: "data/data.db", autoload: true });
 
-    if (req.session.I === req.body.I && bigInt(req.body.s).equals(req.session.s))
+    if (req.session.I === req.body.I && req.body.s === req.session.s)
     {
         db.findOne({ I: req.body.I }, function (err, doc)
         {
@@ -59,7 +56,7 @@ router.get("/", function (req, res, next)
 router.post("/", function (req, res, next)
 {
     if (req.body.I && (!req.body.s || !req.body.v))
-        exchangeSaltAndKeys(res);
+        exchangeSaltAndKeys(req, res);
     else if (req.body.I && req.body.v && req.body.s)
         registerUser(req, res);
     else
