@@ -123,15 +123,9 @@ function validateServerProof(keys)
     var H = sha1(A.toString(16) + M + K).toString();
 
     if (H === serverH)
-    {
-        console.log("SERVER VALIDATED");
         deferred.resolve({ K: K });
-    }
     else
-    {
-        console.log("SERVER FAILED TO VALIDATE");
         deferred.reject();
-    }
 
     return deferred.promise;
 }

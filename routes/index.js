@@ -71,6 +71,8 @@ function computeSessionKey(req, res)
 
             var K = sha1(S.toString(16)).toString();
 
+            console.log(K);
+
             req.session.A = A.toString(16);
             req.session.K = K;
 
@@ -87,7 +89,7 @@ function validateClientProof(req, res)
     var s = bigInt(req.session.s, 16);
     var A = bigInt(req.session.A, 16);
     var B = bigInt(req.session.B, 16);
-    var K = bigInt(req.session.K, 16);
+    var K = req.session.K;
     var clientM = req.body.M;
 
     var shaN = bigInt(sha1(N.toString(16)).toString(), 16);
@@ -98,15 +100,11 @@ function validateClientProof(req, res)
 
     if (M === clientM)
     {
-        console.log("CLIENT VALIDATED");
         var H = sha1(A.toString(16) + M + K).toString();
         res.json({ H: H });
     }
     else
-    {
-        console.log("CLIENT FAILED TO VALIDATE");
         res.sendStatus(400);
-    }
 }
 
 router.get("/", function (req, res, next)
