@@ -14,6 +14,7 @@ function random()
 function exchangeSaltAndKeys(req, res)
 {
     var s = random();
+    req.session.s = s;
     res.json({ N: N.toString(16), g: g.toString(16), s: s.toString(16) });
 }
 
@@ -46,10 +47,12 @@ router.get("/", function (req, res, next)
 
 router.post("/", function (req, res, next)
 {
-    if (req.body.I)
+    if (req.body.I && (!req.body.s || !req.body.v))
+        exchangeSaltAndKeys(res);
+    else if(req.body.I && req.body.v && req.body.s)
         registerUser(req, res);
     else
-        exchangeSaltAndKeys(res);
+        res.sendStatus(400);
 });
 
 module.exports = router;
