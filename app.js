@@ -23,7 +23,7 @@ app.use(session({secret: "srp"}));
 
 // ROUTES
 app.use("/", require("./routes/index"));
-app.use("/users", require("./routes/users"));
+app.use("/users", require("./routes/register"));
 
 // ERROR HANDLERS
 // 404.

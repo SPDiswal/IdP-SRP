@@ -1,0 +1,15 @@
+extends layout
+
+block content
+    h1 Register
+    label(for="username") Username:
+        input#username(type="text", name="username")
+    p
+    label(for="password") Password:
+        input#password(type="password", name="password")
+    p
+    input#register(type="button", value="Register")
+    br
+    a(href="/") I have an account already
+
+    script(src="/scripts/register.js")

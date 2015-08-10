@@ -8,10 +8,11 @@ function random(N)
 function signIn()
 {
     clientHello()
-    .then(clientKeyExchange)
-    .then(computeSessionKey)
-    .then(established)
-    .catch(errorHandler);
+        .then(clientKeyExchange)
+        .then(computeSessionKey)
+        .then(validateServerProof)
+        .then(established)
+        .catch(errorHandler);
 }
 
 function clientHello()
@@ -47,7 +48,6 @@ function clientKeyExchange(keys)
         return deferred.promise;
     }
 
-    //var a = bigInt("60975527035CF2AD1989806F0407210BC81EDC04E2762A56AFD529DDDA2D4393", 16);
     var a = random(N);
     var A = g.modPow(a, N);
 
@@ -80,7 +80,6 @@ function computeSessionKey(keys)
     var u = bigInt(sha1(A.toString(16) + B.toString(16)).toString(), 16);
     var k = bigInt(sha1(N.toString(16) + g.toString(16)).toString(), 16);
     var x = bigInt(sha1(s.toString(16) + sha1(I + ":" + P).toString()).toString(), 16);
-    //var v = g.modPow(x, N);
 
     // Checking for ILLEGAL PARAMETER.
     if (u.isZero())
@@ -102,9 +101,36 @@ function computeSessionKey(keys)
         url:         "/",
         data:        { M: M },
         contentType: "application/json",
-        success:     resolve(deferred, { K: K }),
+        success:     resolve(deferred, { A: A, K: K, M: M }),
         error:       reject(deferred)
     });
+
+    return deferred.promise;
+}
+
+function validateServerProof(keys)
+{
+    var deferred = Q.defer();
+
+    var A = keys.A;
+    var K = keys.K;
+    var M = keys.M;
+    var serverH = keys.H;
+
+    var H = sha1(A.toString(16) + M + K).toString();
+
+    if (H === serverH)
+    {
+        console.log("SERVER VALIDATED");
+        deferred.resolve({ K: K });
+    }
+    else
+    {
+        console.log("SERVER FAILED TO VALIDATE");
+        deferred.reject();
+    }
+
+    return deferred.promise;
 }
 
 function established(keys)
