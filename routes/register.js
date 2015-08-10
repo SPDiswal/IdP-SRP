@@ -14,7 +14,13 @@ function random()
 function exchangeSaltAndKeys(req, res)
 {
     var s = random();
+    req.session.I = req.body.I;
     req.session.s = s;
+
+    console.log(N.toString(16));
+    console.log(g.toString(16));
+    console.log(s.toString(16));
+
     res.json({ N: N.toString(16), g: g.toString(16), s: s.toString(16) });
 }
 
@@ -22,22 +28,27 @@ function registerUser(req, res)
 {
     var db = new NeDB({ filename: "data/data.db", autoload: true });
 
-    db.findOne({ I: req.body.I }, function (err, doc)
+    if (req.session.I === req.body.I && bigInt(req.body.s).equals(req.session.s))
     {
-        if (doc)
-            res.redirect("/register?error=1");
-        else
+        db.findOne({ I: req.body.I }, function (err, doc)
         {
-            db.insert({
-                I: req.body.I,
-                s: req.body.s,
-                v: req.body.v
-            }, function ()
+            if (doc)
+                res.sendStatus(400);
+            else
             {
-                res.redirect("/");
-            });
-        }
-    });
+                db.insert({
+                    I: req.body.I,
+                    s: req.body.s,
+                    v: req.body.v
+                }, function ()
+                {
+                    res.sendStatus(200);
+                });
+            }
+        });
+    }
+    else
+        res.sendStatus(400);
 }
 
 router.get("/", function (req, res, next)
@@ -49,7 +60,7 @@ router.post("/", function (req, res, next)
 {
     if (req.body.I && (!req.body.s || !req.body.v))
         exchangeSaltAndKeys(res);
-    else if(req.body.I && req.body.v && req.body.s)
+    else if (req.body.I && req.body.v && req.body.s)
         registerUser(req, res);
     else
         res.sendStatus(400);

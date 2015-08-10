@@ -15,7 +15,7 @@ function clientRegistrationHello()
 
     $.ajax({
         type:        "POST",
-        url:         "/",
+        url:         "/register",
         data:        { I: I },
         contentType: "application/json",
         success:     resolve(deferred),
@@ -32,6 +32,9 @@ function sendRegistration(keys)
     var I = $("#username").val();
     var P = $("#password").val();
 
+    console.log("I: " + I);
+    console.log("P: " + P);
+
     var N = bigInt(keys.N);
     var g = bigInt(keys.g);
     var s = bigInt(keys.s);
@@ -41,7 +44,7 @@ function sendRegistration(keys)
 
     $.ajax({
         type:        "POST",
-        url:         "/",
+        url:         "/register",
         data:        { I: I, s: s.toString(16), v: v.toString(16) },
         contentType: "application/json",
         success:     resolve(deferred),
