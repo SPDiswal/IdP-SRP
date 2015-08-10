@@ -9,7 +9,7 @@ router.post("/", function (req, res, next)
     var messageFromClient = aes.decrypt(req.body.message, sessionKey).toString(encUtf8);
 
     var message = "";
-    var messageIndex = Math.floor(Math.random() * (3 - 1)) + 1;
+    var messageIndex = Math.floor(Math.random() * (4 - 1)) + 1;
 
     switch (messageIndex)
     {
@@ -18,11 +18,11 @@ router.post("/", function (req, res, next)
             break;
 
         case 2:
-            message = "Hello from Mars!";
+            message = "Happy summer holidays.";
             break;
 
         case 3:
-            message = "Hello from Mars!";
+            message = "Mein Vater war ein sehr beruhmter Spurhund.";
             break;
     }
 

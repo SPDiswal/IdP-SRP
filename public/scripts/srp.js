@@ -142,7 +142,7 @@ function established(keys)
     var sessionKey = keys.K;
 
     var message = "";
-    var messageIndex = Math.floor(Math.random() * (3 - 1)) + 1;
+    var messageIndex = Math.floor(Math.random() * (4 - 1)) + 1;
 
     switch (messageIndex)
     {
@@ -151,11 +151,11 @@ function established(keys)
             break;
 
         case 2:
-            message = "Hello from Earth!";
+            message = "I'm Chuck Norris.";
             break;
 
         case 3:
-            message = "Hello from Earth!";
+            message = "*knock knock*";
             break;
     }
 
