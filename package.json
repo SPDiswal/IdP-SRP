@@ -17,7 +17,6 @@
     "jade": "~1.11.0",
     "morgan": "~1.6.1",
     "nedb": "1.1.2",
-    "node-wolfram": "~0.0.1",
     "serve-favicon": "~2.3.0"
   }
 }

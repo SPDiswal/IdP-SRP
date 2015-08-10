@@ -1,127 +1,126 @@
 var sha1 = CryptoJS.SHA1;
 
-var a = bigInt("60975527035CF2AD1989806F0407210BC81EDC04E2762A56AFD529DDDA2D4393", 16);
+function random(N)
+{
+    return bigInt.randBetween(bigInt[2].modPow(bigInt[256], N), bigInt[2].modPow(bigInt[512], N)).modPow(bigInt[2], N);
+}
 
 function signIn()
 {
-    clientHello().then(exchangePublicValues);
+    clientHello()
+    .then(clientKeyExchange)
+    .then(computeSessionKey)
+    .then(established)
+    .catch(errorHandler);
 }
 
 function clientHello()
 {
     var deferred = Q.defer();
-    var username = $("#username").val();
+    var I = $("#username").val();
 
-    //$.ajax({
-    //    type:        "POST",
-    //    url:         "/",
-    //    data:        JSON.stringify({ username: username }),
-    //    contentType: "application/json",
-    //    success:     resolve(deferred),
-    //    error:       reject(deferred)
-    //});
-
-    resolve(deferred)({
-        N: "EEAF0AB9ADB38DD69C33F80AFA8FC5E86072618775FF3C0B9EA2314C9C256576D674DF7496EA81D3383B4813D692C6E0E0D5D8E250B98BE48E495C1D6089DAD15DC7D7B46154D6B6CE8EF4AD69B15D4982559B297BCF1885C529F566660E57EC68EDBC3C05726CC02FD4CBF4976EAA9AFD5138FE8376435B9FC61D2FC0EB06E3",
-        g: "2",
-        s: "BEB25379D1A8581EB5A727673A2441EE",
-        B: "BD0C61512C692C0CB6D041FA01BB152D4916A1E77AF46AE105393011BAF38964DC46A0670DD125B95A981652236F99D9B681CBF87837EC996C6DA04453728610D0C6DDB58B318885D7D82C7F8DEB75CE7BD4FBAA37089E6F9C6059F388838E7A00030B331EB76840910440B1B27AAEAEEB4012B7D7665238A8E3FB004B117B58"
+    $.ajax({
+        type:        "POST",
+        url:         "/",
+        data:        { I: I },
+        contentType: "application/json",
+        success:     resolve(deferred),
+        error:       reject(deferred)
     });
 
     return deferred.promise;
 }
 
-function hexPad(n, width, z)
-{
-    z = z || "0";
-    n = n + "";
-    return n.length >= width ? n : new Array(width - n.length + 1).join(z) + n;
-}
-
-function pad(bigInteger)
-{
-    var result = "";
-    var hex = hexPad(bigInteger.toString(16), 256, "0");
-
-    for (var bytes = [], c = 0; c < hex.length; c += 2)
-        bytes.push(parseInt(hex.substr(c, 2), 16));
-
-    for (var i = 0; i < bytes.length; i++)
-        result += String.fromCharCode(bytes[i]); // parseInt(bytes[i], 2)
-
-    return result;
-}
-
-function byteSHA1(bigInteger)
-{
-    var result = "";
-    var hex = bigInteger.toString(16);
-
-    for (var bytes = [], c = 0; c < hex.length; c += 2)
-        bytes.push(parseInt(hex.substr(c, 2), 16));
-
-    for (var i = 0; i < bytes.length; i++)
-        result += String.fromCharCode(parseInt(bytes[i], 2));
-
-    return sha1(result);
-}
-
-function exchangePublicValues(data)
+function clientKeyExchange(keys)
 {
     var deferred = Q.defer();
-    var username = "alice";//$("#username").val();
-    var password = "password123";//$("#password").val();
 
-    var N = bigInt(data.N, 16);
-    var g = bigInt(data.g, 16);
-    var s = bigInt(data.s, 16);
-    //var B = bigInt(data.B, 16);
+    var N = bigInt(keys.N, 16);
+    var g = bigInt(keys.g, 16);
+    var s = bigInt(keys.s, 16);
+    var B = bigInt(keys.B, 16);
 
-    // TODO Use random a.
+    // Checking for ILLEGAL PARAMETER.
+    if (B.mod(N).isZero())
+    {
+        deferred.reject();
+        return deferred.promise;
+    }
+
+    //var a = bigInt("60975527035CF2AD1989806F0407210BC81EDC04E2762A56AFD529DDDA2D4393", 16);
+    var a = random(N);
     var A = g.modPow(a, N);
-    var b = bigInt("E487CB59D31AC550471E81F00F6928E01DDA08E974A004F49E61F5D105284D20", 16);
 
-    var k = bigInt(sha1(N.toString(16) + g.toString(16)).toString(CryptoJS.enc.Hex), 16);
-    var x = bigInt(byteSHA1(s.toString(16) + byteSHA1(username + ":" + password)).toString(CryptoJS.enc.Hex), 16);
-
-    console.log("x: " + x.toString(16));
-
-    var v = g.modPow(x, N).mod(N);
-
-    var B = k.times(v).plus(g.modPow(b, N)).mod(N);
-    var u = bigInt(sha1(A.toString(16) + B.toString(16)).toString(CryptoJS.enc.Hex), 16);
-
-    var clientSessionKey = B.minus(k.times(g.modPow(x, N))).modPow(a.plus(u.times(x)), N).mod(N);
-
-    if (clientSessionKey.isNegative()) clientSessionKey = clientSessionKey.plus(N);
-    console.log(clientSessionKey.toString(16));
-
-
-
-    var serverSessionKey = A.times(v.modPow(u, N)).modPow(b, N).mod(N);
-
-    if (serverSessionKey.isNegative()) serverSessionKey = serverSessionKey.plus(N);
-    console.log(serverSessionKey.toString(16));
-
-    deferred.resolve();
-
-    //$.ajax({
-    //    type:        "POST",
-    //    url:         "/",
-    //    data:        JSON.stringify({ A: A }),
-    //    contentType: "application/json",
-    //    success:     resolve(deferred),
-    //    error:       reject(deferred)
-    //});
+    $.ajax({
+        type:        "POST",
+        url:         "/",
+        data:        { A: A.toString(16) },
+        contentType: "application/json",
+        success:     resolve(deferred, { N: N, g: g, a: a, A: A, B: B, s: s }),
+        error:       reject(deferred)
+    });
 
     return deferred.promise;
 }
 
-function resolve(deferred)
+function computeSessionKey(keys)
+{
+    var deferred = Q.defer();
+
+    var I = $("#username").val();
+    var P = $("#password").val();
+
+    var N = keys.N;
+    var g = keys.g;
+    var a = keys.a;
+    var A = keys.A;
+    var B = keys.B;
+    var s = keys.s;
+
+    var u = bigInt(sha1(A.toString(16) + B.toString(16)).toString(), 16);
+    var k = bigInt(sha1(N.toString(16) + g.toString(16)).toString(), 16);
+    var x = bigInt(sha1(s.toString(16) + sha1(I + ":" + P).toString()).toString(), 16);
+    //var v = g.modPow(x, N);
+
+    // Checking for ILLEGAL PARAMETER.
+    if (u.isZero())
+    {
+        deferred.reject();
+        return deferred.promise;
+    }
+
+    var S = B.minus(k.times(g.modPow(x, N))).modPow(a.plus(u.times(x)), N).mod(N);
+    if (S.isNegative()) S = S.plus(N);
+
+    var K = sha1(S.toString(16)).toString();
+
+    var xor = bigInt(sha1(N.toString(16)).toString()).xor(bigInt(sha1(g.toString(16)).toString()));
+    var M = sha1(xor.toString(16) + sha1(I).toString() + s.toString(16) + A.toString(16) + B.toString(16) + K).toString();
+
+    $.ajax({
+        type:        "POST",
+        url:         "/",
+        data:        { M: M },
+        contentType: "application/json",
+        success:     resolve(deferred, { K: K }),
+        error:       reject(deferred)
+    });
+}
+
+function established(keys)
+{
+    var K = keys.K;
+
+}
+
+function resolve(deferred, predefinedData)
 {
     return function (data)
     {
-        deferred.resolve(data);
+        if (predefinedData)
+            deferred.resolve($.extend({}, predefinedData, data));
+        else
+            deferred.resolve(data);
     };
 }
 
@@ -131,6 +130,11 @@ function reject(deferred)
     {
         deferred.reject();
     };
+}
+
+function errorHandler()
+{
+    console.log("ERROR");
 }
 
 $("#signIn").click(signIn);
