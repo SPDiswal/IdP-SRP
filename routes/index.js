@@ -21,19 +21,19 @@ function serverKeyExchange(req, res)
         if (doc)
         {
             var I = doc.I;
-            var s = doc.s;
-            var v = doc.v;
+            var s = bigInt(doc.s, 16);
+            var v = bigInt(doc.v, 16);
 
             var b = random();
             var k = bigInt(sha1(N.toString(16) + g.toString(16)).toString(), 16);
             var B = k.multiply(v).plus(g.modPow(b, N)).mod(N);
 
             req.session.I = I;
-            req.session.s = s;
-            req.session.v = v;
-            req.session.k = k;
-            req.session.b = b;
-            req.session.B = B;
+            req.session.s = s.toString(16);
+            req.session.v = v.toString(16);
+            req.session.k = k.toString(16);
+            req.session.b = b.toString(16);
+            req.session.B = B.toString(16);
 
             res.json({ N: N.toString(16), g: g.toString(16), s: s.toString(16), B: B.toString(16) });
         }
@@ -44,12 +44,14 @@ function serverKeyExchange(req, res)
 
 function computeSessionKey(req, res)
 {
+    var db = new NeDB({ filename: "data/data.db", autoload: true });
+
     var I = req.session.I;
-    var s = req.session.s;
-    var v = req.session.v;
-    var k = req.session.k;
-    var b = req.session.b;
-    var B = req.session.B;
+    var s = bigInt(req.session.s, 16);
+    var v = bigInt(req.session.v, 16);
+    var k = bigInt(req.session.k, 16);
+    var b = bigInt(req.session.b, 16);
+    var B = bigInt(req.session.B, 16);
 
     var A = bigInt(req.body.A, 16);
 
@@ -69,7 +71,9 @@ function computeSessionKey(req, res)
 
             var K = sha1(S.toString(16)).toString();
 
+            req.session.A = A.toString(16);
             req.session.K = K;
+
             res.sendStatus(200);
         }
         else
@@ -80,13 +84,16 @@ function computeSessionKey(req, res)
 function validateClientProof(req, res)
 {
     var I = req.session.I;
-    var s = req.session.s;
-    var A = req.session.B;
-    var B = req.session.B;
-    var K = req.session.K;
-    var clientM = bigInt(req.body.M, 16);
+    var s = bigInt(req.session.s, 16);
+    var A = bigInt(req.session.A, 16);
+    var B = bigInt(req.session.B, 16);
+    var K = bigInt(req.session.K, 16);
+    var clientM = req.body.M;
 
-    var xor = bigInt(sha1(N.toString(16)).toString()).xor(bigInt(sha1(g.toString(16)).toString()));
+    var shaN = bigInt(sha1(N.toString(16)).toString(), 16);
+    var shag = bigInt(sha1(g.toString(16)).toString(), 16);
+
+    var xor = shaN.xor(shag);
     var M = sha1(xor.toString(16) + sha1(I).toString() + s.toString(16) + A.toString(16) + B.toString(16) + K).toString();
 
     if (M === clientM)

@@ -93,7 +93,10 @@ function computeSessionKey(keys)
 
     var K = sha1(S.toString(16)).toString();
 
-    var xor = bigInt(sha1(N.toString(16)).toString()).xor(bigInt(sha1(g.toString(16)).toString()));
+    var shaN = bigInt(sha1(N.toString(16)).toString(), 16);
+    var shag = bigInt(sha1(g.toString(16)).toString(), 16);
+
+    var xor = shaN.xor(shag);
     var M = sha1(xor.toString(16) + sha1(I).toString() + s.toString(16) + A.toString(16) + B.toString(16) + K).toString();
 
     $.ajax({
